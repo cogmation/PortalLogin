@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" href="vrtIcon.ico" />
+  <title>Virtual Robotics Toolkit Comp Portal Sign-In Example</title>
+
+  <!-- update the version number as needed -->
+  <script defer src="/__/firebase/7.4.0/firebase-app.js"></script>
+  <!-- include only the Firebase features as you need -->
+  <script defer src="/__/firebase/7.4.0/firebase-auth.js"></script>
+  <script defer src="/__/firebase/7.4.0/firebase-database.js"></script>
+  <script defer src="/__/firebase/7.4.0/firebase-functions.js"></script>
+  <!-- initialize the SDK after all desired features are loaded -->
+  <script defer src="/__/firebase/init.js"></script>
+
+  <style media="screen">
+    body {
+      background: #ECEFF1;
+      color: rgba(0, 0, 0, 0.87);
+      font-family: Roboto, Helvetica, Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+    }
+
+    html,
+    body,
+    .container {
+      height: 100%;
+      width: 100%;
+    }
+
+    .container {
+      display: -webkit-flexbox;
+      display: -ms-flexbox;
+      display: -webkit-flex;
+      display: flex;
+      -webkit-flex-align: center;
+      -ms-flex-align: center;
+      -webkit-align-items: center;
+      align-items: center;
+      justify-content: center;
+    }
+
+    #pwd-button {
+      width: 100%;
+    }
+    #sign-out-button {
+      width: 100%;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container" id="pwd-container">
+    <div class='para'>
+      <label for='regpwd'>Password:</label> <br />
+      <div class='pwdwidgetdiv' id='thepwddiv'></div>
+      <div><input type='password' id='regpwd' name='regpwd' /></div>
+      <p><button id="pwd-button" type="button" onclick="submitPassword()">Submit</button></p>
+    </div>
+  </div>
+<div class="container" id="user-info-containter">
+  <label id="usernameLabel">Hello</label>
+  <p><button id="sign-out-button" type="button" onclick="SignOut()">Sign Out</button></p>
+</div>
+  <script>
+    var waitingForError = false;
+    document.addEventListener('DOMContentLoaded', function () {
+
+      try {
+        document.getElementById('pwd-container').style.display = 'none';
+        document.getElementById('user-info-containter').style.display = 'none';
+        document.getElementById('regpwd').onkeyup = function (e) {
+          if (e.which == 13) submitPassword();// Enter key
+        };
+
+        firebase.auth().setPersistence(firebase.auth.Auth.Persistence.SESSION);
+
+        firebase.auth().getRedirectResult()
+          .catch((error) => {
+            HandleSignInErrors(error);
+          });
+
+        firebase.auth().onAuthStateChanged((user) => {
+          if (user) {
+            document.getElementById('user-info-containter').style.display = '';
+            document.getElementById('usernameLabel').innerHTML = 'Hello ' + user.email;
+          } else {
+            if (!waitingForError) {
+              LoginWithMicrosoft();
+            }
+          }
+        });
+
+      } catch (e) {
+        console.error(e);
+        document.getElementById('load').innerHTML = 'Error loading the Firebase SDK, check the console.';
+      }
+    });
+
+    function showPasswordInput() {
+      document.getElementById('pwd-container').style.display = '';
+    }
+
+    function submitPassword() {
+      var password = document.getElementById('regpwd').value;
+      return firebase.auth().signInWithEmailAndPassword(pendingEmail, password).then(user => {
+        return firebase.auth().currentUser.linkWithCredential(pendingCredential).then(user => {
+          return firebase.auth().currentUser.unlink(firebase.auth.EmailAuthProvider.PROVIDER_ID).then(() => {
+            document.getElementById('pwd-container').style.display = 'none';
+            console.log("Linked successfully with prev login");
+          });
+        });
+      }).catch(error => {
+        if (error.code === "auth/wrong-password") {
+          alert("Wrong password, please try again.");
+        }
+        else {
+          console.log(error);
+        }
+      });
+    }
+
+    var pendingCredential;
+    var pendingEmail;
+
+    function HandleSignInErrors(error) {
+      //console.log(error);
+      waitingForError = true;
+      if (error.code === 'auth/account-exists-with-different-credential') {
+        var pendingCred = error.credential;
+        var email = error.email;
+        firebase.auth().fetchSignInMethodsForEmail(email).then((methods) => {
+          if (methods[0] === 'password') {
+            pendingCredential = pendingCred;
+            pendingEmail = email;
+            return showPasswordInput();
+          }
+        });
+        var provider = getProviderForProviderId(methods[0]);
+        firebase.auth().signInWithPopup(provider).then(function (result) {
+          result.user.linkAndRetrieveDataWithCredential(pendingCred);
+        });
+      }
+    }
+
+    function LoginWithMicrosoft() {
+      firebase.auth().signInWithRedirect(new firebase.auth.OAuthProvider('microsoft.com'))
+        .catch((error) => {
+          return HandleSignInErrors(error);
+        });
+    }
+
+    function SignOut() {
+      firebase.auth().signOut();
+    }
+  </script>
+</body>
+
+</html>
