@@ -127,6 +127,8 @@
     var pendingCredential;
     var pendingEmail;
 
+
+    // From https://firebase.google.com/docs/auth/web/microsoft-oauth
     function HandleSignInErrors(error) {
       //console.log(error);
       waitingForError = true;
@@ -140,10 +142,11 @@
             return showPasswordInput();
           }
         });
-        var provider = getProviderForProviderId(methods[0]);
-        firebase.auth().signInWithPopup(provider).then(function (result) {
-          result.user.linkAndRetrieveDataWithCredential(pendingCred);
-        });
+        // this is needed to handle cases other than email/password login.
+        // var provider = getProviderForProviderId(methods[0]);
+        // firebase.auth().signInWithPopup(provider).then(function (result) {
+        //   result.user.linkAndRetrieveDataWithCredential(pendingCred);
+        // });
       }
     }
 
