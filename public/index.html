@@ -47,6 +47,7 @@
     #pwd-button {
       width: 100%;
     }
+
     #sign-out-button {
       width: 100%;
     }
@@ -62,10 +63,10 @@
       <p><button id="pwd-button" type="button" onclick="submitPassword()">Submit</button></p>
     </div>
   </div>
-<div class="container" id="user-info-containter">
-  <label id="usernameLabel">Hello</label>
-  <p><button id="sign-out-button" type="button" onclick="SignOut()">Sign Out</button></p>
-</div>
+  <div class="container" id="user-info-containter">
+    <label id="usernameLabel">Hello</label>
+    <p><button id="sign-out-button" type="button" onclick="SignOut()">Sign Out</button></p>
+  </div>
   <script>
     var waitingForError = false;
     document.addEventListener('DOMContentLoaded', function () {
@@ -161,7 +162,13 @@
     }
 
     function SignOut() {
-      firebase.auth().signOut();
+      
+      firebase.auth().signOut().then(() => { 
+        window.location.href = "https://login.microsoftonline.com/common/oauth2/v2.0/logout";//?post_logout_redirect_uri=" + 
+                               // encodeURIComponent(window.location.href);
+        // currently, redirect does not work correctly.. known issue according to MS. 
+        // https://github.com/AzureAD/microsoft-authentication-library-for-js/issues/735
+      });
     }
   </script>
 </body>
