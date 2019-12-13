@@ -1,5 +1,6 @@
 {
   "projects": {
-    "default": "d3d5232f9"
+    "default": "d3d5232f9",
+    "testlms": "testlms-cf1d3"
   }
 }
